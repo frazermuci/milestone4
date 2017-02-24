@@ -9,8 +9,54 @@ function Socket(model){
 	first = Math.floor( Date.now() / 1000 );
 	this.model = model;
 	this.connection = new WebSocket('ws://'+clientAddress+':'+clientPort);//, ['soap', 'xmpp']);
+	this.buff= {seqNum: 0, buffVect : new Vector(0,0)};
+	this.tVar;
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//////////////RIGHT NOW, ONLY ASSUME ONE TICK PASSED/////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	function correctSnake(sID, snake,dir)
+	{
+		var rev = new Vector(dir.x*-1,dir.y*-1);
+		var body = snake.getBody();
+		for(var i = 0; i < body.length; ++i)
+		{
+			if(!(body[i].x == 0 && body[i].y == 0))
+			{
+				body[i] = body[i].add(rev);
+			}
+		}
+		snake.changeDirection(dir);
+		//grow snake?///////////////MIGHT CAUSE SOME ISSUES
+		getModel().growSnake(sID);
+		/////////////////
+	}
+	function resetBuff(dir)
+	{
+		var otherSnakeId = getModel().snakeID == 1 ? 0 : 1;
+		var otherSnake = getModel().getSnake(otherSnake);
+		//is this why he had the pre allocated snake?
+		
+		//////////////RIGHT NOW, ONLY ASSUME ONE TICK PASSED/////
+		if(!dir.equals(otherSnake.getDirection()))
+		{
+			
+			correctSnake(otherSnakeId, otherSnake, dir);//move body back one and
+		}
+		this.buff = {seqNum: 0, buffVect : new Vector(0,0)};
+	}
 	
-
+	function extrapolate (seqNum, dir)
+	{
+		var func = function()
+		{
+			this.buff.seqNum = seqNum+1;
+			this.buff.buffVect = this.buff.buffVect.add(dir);	
+		}
+		return func;
+	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	this.convertBinToInt = function(input)
 	{
 		var a = 0;//s[0];
@@ -213,6 +259,8 @@ function Socket(model){
 // Log messages from the server
 	this.connection.onmessage = (e)=> {
 		//this is in scope?
+		resetBuff();
+		clearTimeout(this.tVar);
 		var array = e.data.split(":");
 		//console.log(array)
 		console.log((Math.floor( Date.now() / 1000 ))-first);
@@ -244,6 +292,8 @@ function Socket(model){
 		
 		this.count =0;
 		ViewRefresh();
+		var inID = getModel().snakeIndex == 1 ? 0 : 1;
+		this.tVar = setTimeout(extrapolate(inID, getModel().getSnake(inID).getDirection()),500);
 	}
 	this.done = ()=>{this.connection.send("DONE")}
 };
