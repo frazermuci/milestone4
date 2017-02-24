@@ -27,7 +27,8 @@ function Socket(model){
 		}
 		snake.changeDirection(dir);
 		//grow snake?///////////////MIGHT CAUSE SOME ISSUES
-		getModel().growSnake(sID);
+		//getModel().growSnake(sID);
+		window.setTimeout(ControllerTick, 750);
 		/////////////////
 	}
 	function resetBuff(dir)
@@ -293,7 +294,7 @@ function Socket(model){
 		this.count =0;
 		ViewRefresh();
 		var inID = getModel().snakeIndex == 1 ? 0 : 1;
-		this.tVar = setTimeout(extrapolate(inID, getModel().getSnake(inID).getDirection()),500);
+		this.tVar = setInterval(extrapolate(inID, getModel().getSnake(inID).getDirection()),500);
 	}
 	this.done = ()=>{this.connection.send("DONE")}
 };
