@@ -1,0 +1,66 @@
+body
+{
+	background-color: #0A0A0A;
+	color: #DDFFDD;
+	text-align: center;
+}
+
+#main
+{
+	background-color: #352535;
+	margin: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+	border-left : 2px solid black;
+	border-right : 2px solid black;
+	width: 80%;
+	padding: 20px;
+}
+
+#gameBoard
+{
+	border: 5px solid #44BB44;
+	background-color: #229922;
+	margin: auto;
+	margin-top: 15px;
+	margin-bottom: 15px;
+	width : 80%;
+	height: 80%;
+}
+
+td
+{
+	border: 1px solid #44BB44;
+	min-width: 15px;
+	min-height: 15px;
+}
+
+.tileEmpty
+{
+	background-color: #111111;
+}
+
+.tileSnakeA
+{
+	background-color: #1166AA;
+}
+
+.tileSnakeB
+{
+	background-color: #BB1111;
+}
+
+.tileHeadA
+{
+	background-color: #4499DD;
+}
+
+.tileHeadB
+{
+	background-color: #EE4444;
+}
+
+.tileBonus
+{
+	background-color: #EEEE44;
+}

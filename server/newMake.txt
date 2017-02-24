@@ -1,0 +1,1 @@
+g++ main.cpp websocket.cpp sha1.cpp base64.cpp manageconnection.cpp model.cpp snake.cpp tuple.cpp -o cm.exe

@@ -1,0 +1,129 @@
+<!DOCTYPE html5>
+<html>
+	<head>
+		<title>Snake ? Snaaaake !!!!</title>
+		<link rel="stylesheet" type="text/css" href="css.css">
+	</head>
+
+	<body>
+		<div id="main">
+			<h1 id="idPrompt">Enter the address and port number :
+			<input type="text" id="address" value="127.0.0.1"/>
+			<input type="text" id="port" value="21234"/>
+			<!--<br/>Enter two ids : <input type="text" id="idfield1" value="0"/>
+			<input type="text" id="idfield2" value="1"/><br/>-->
+			<br/>Enter an id : <input type="text" id="idfield1" value="0"/><br/>
+			<input type="button" value="Start" onclick="idEntered()"></h1>
+			<h1 id="toptitle">Snake</h1>
+			<h1>latency in seconds:</h1>
+			<h1 id="latency">0</h1>
+			
+			<table id="gameBoard">
+				<tr>
+					<td class="tileEmpty" id="tile0"></td>
+					<td class="tileEmpty" id="tile1"></td>
+					<td class="tileEmpty" id="tile2"></td>
+					<td class="tileEmpty" id="tile3"></td>
+					<td class="tileEmpty" id="tile4"></td>
+					<td class="tileEmpty" id="tile5"></td>
+					<td class="tileEmpty" id="tile6"></td>
+					<td class="tileEmpty" id="tile7"></td>
+				</tr>
+				<tr>
+					<td class="tileEmpty" id="tile8"></td>
+					<td class="tileEmpty" id="tile9"></td>
+					<td class="tileEmpty" id="tile10"></td>
+					<td class="tileEmpty" id="tile11"></td>
+					<td class="tileEmpty" id="tile12"></td>
+					<td class="tileEmpty" id="tile13"></td>
+					<td class="tileEmpty" id="tile14"></td>
+					<td class="tileEmpty" id="tile15"></td>
+				</tr>
+				<tr>
+					<td class="tileEmpty" id="tile16"></td>
+					<td class="tileEmpty" id="tile17"></td>
+					<td class="tileEmpty" id="tile18"></td>
+					<td class="tileEmpty" id="tile19"></td>
+					<td class="tileEmpty" id="tile20"></td>
+					<td class="tileEmpty" id="tile21"></td>
+					<td class="tileEmpty" id="tile22"></td>
+					<td class="tileEmpty" id="tile23"></td>
+				</tr>
+				<tr>
+					<td class="tileEmpty" id="tile24"></td>
+					<td class="tileEmpty" id="tile25"></td>
+					<td class="tileEmpty" id="tile26"></td>
+					<td class="tileEmpty" id="tile27"></td>
+					<td class="tileEmpty" id="tile28"></td>
+					<td class="tileEmpty" id="tile29"></td>
+					<td class="tileEmpty" id="tile30"></td>
+					<td class="tileEmpty" id="tile31"></td>
+				</tr>
+				<tr>
+					<td class="tileEmpty" id="tile32"></td>
+					<td class="tileEmpty" id="tile33"></td>
+					<td class="tileEmpty" id="tile34"></td>
+					<td class="tileEmpty" id="tile35"></td>
+					<td class="tileEmpty" id="tile36"></td>
+					<td class="tileEmpty" id="tile37"></td>
+					<td class="tileEmpty" id="tile38"></td>
+					<td class="tileEmpty" id="tile39"></td>
+				</tr>
+				<tr>
+					<td class="tileEmpty" id="tile40"></td>
+					<td class="tileEmpty" id="tile41"></td>
+					<td class="tileEmpty" id="tile42"></td>
+					<td class="tileEmpty" id="tile43"></td>
+					<td class="tileEmpty" id="tile44"></td>
+					<td class="tileEmpty" id="tile45"></td>
+					<td class="tileEmpty" id="tile46"></td>
+					<td class="tileEmpty" id="tile47"></td>
+				</tr>
+			</table>
+			
+			<h2 id="netInfo"></h2>
+			<!--<input type="button" id="ButtonPress" value="0" script="ControllerNewGame();" />-->
+		</div>
+
+		<script  type="text/javascript" src="movehelper.js"></script>
+		<script  type="text/javascript" src="vector.js"></script>
+		<script  type="text/javascript" src="snake.js"></script>
+		<script  type="text/javascript" src="input.js"></script>
+		<script  type="text/javascript" src="model.js"></script>
+		<script  type="text/javascript" src="client.js"></script>
+		<script  type="text/javascript" src="View.js"></script>
+		<script  type="text/javascript" src="Controller.js"></script>
+		<script  type="text/javascript">
+			<!--document.getElementById("toptitle").style.display = "none";-->
+			
+			function idEntered()
+			{
+				console.log("Gooo");
+				document.getElementById("toptitle").style.display = "block";
+				document.getElementById("idPrompt").style.display = "none";
+				var fieldA = document.getElementById("address");
+				clientAddress = fieldA.value;
+				var fieldP = document.getElementById("port");
+				clientPort = fieldP.value;
+				var field1 = document.getElementById("idfield1");
+				var id1 = field1.value;
+				//var field2 = document.getElementById("idfield2");
+				//var id2 = field2.value;
+				//var ids = [id1, id2];
+				
+				
+				document.getElementById("netInfo").innerHTML = 'Server : '+
+					clientAddress + ':' + clientPort; //+ ' // IDs : '+id1+','+id2;
+				
+				//getModel().setIds(ids);
+				getModel().snakeID = id1;
+				ControllerNewGame();
+			}
+		
+		</script>
+
+
+		<!-- <script  type="text/javascript" src="regtestingSnake.js"></script>
+		<script  type="text/javascript" src="regtestingModel.js"></script> -->
+	</body>
+</html>
