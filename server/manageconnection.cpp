@@ -85,6 +85,7 @@ void ConnectionManager::removeConn(int ID)
 
 void ConnectionManager::send(int clientID, string message)
 {
+  cout << __FUNCTION__ << ": " << " Sending [" << message << "]" << endl;
 	this->server->wsSend(clientID, message);
 }
 
@@ -93,7 +94,8 @@ void ConnectionManager::sendAll(string message)
 	map<int, int>::iterator it;
     for (it = this->IDs.begin(); it != this->IDs.end(); it++)
 	{
-		this->server->wsSend(it->first, message);
+    cout << __FUNCTION__ << ": " << " Sending [" << message << "] to client [" << it->first << "]" << endl;
+		this->send(it->first, message);
 	}
 }
 
@@ -101,17 +103,13 @@ void ConnectionManager::sendIDs()
 {
 	ostringstream os;
 	map<int,int>::iterator a, b;
-	for(a = this->IDs.begin(); a != this->IDs.end(); ++a)
+	for(a = this->IDs.begin(); a != this->IDs.end(); a++)
 	{
-		for(b = this->IDs.begin(); b != this->IDs.end(); ++b)
-		{
-			if(b->second != a->second)
-			{
-				os <<"start:"<< b->second << ":"<<this->clientIDWithConnNum[a->first];
-				this->server->wsSend(a->first, os.str());
-				os.str("");
-			}
-		}
+		os <<"start:"<< a->second << ":"<<this->clientIDWithConnNum[a->first];
+    cout << __FUNCTION__ << ": " << "cm.sendIDs.Sending [" << os.str() << "]" << endl;
+	  //this->server->wsSend(a->first, os.str());
+		this->send(a->first, os.str());
+		os.str("");
 	}
 }
 
@@ -124,6 +122,7 @@ bool ConnectionManager::stateReady(int clientID, int seqNum)
 {
 	/*this->state[clientID] = true;
 	bool r = ready(this->state);
+    cout << __FUNCTION__ << ": " << "State r [" << r << "]" << endl;
 	if(r)
 	{
 		this->state = map<int,bool>();
@@ -260,8 +259,8 @@ void ConnectionManager::moveModel(Compressed* c)
     bool lose1 = false;
     bool lose2 = false;
 
-	//cout << "head1x: " << head1.getX() << " | " <<this->model.getBoardWidth() << endl;
-	//cout << "head1y: " << head1.getY() << " | " <<this->model.getBoardHeight() << endl;
+	cout << "head1x: " << head1.getX() << " | " <<this->model.getBoardWidth() << endl;
+	cout << "head1y: " << head1.getY() << " | " <<this->model.getBoardHeight() << endl;
     // Out of the board
     if(!(head1.getX() >= 0 && head1.getX() < this->model.getBoardWidth() &&\
 	head1.getY() >= 0 && head1.getY() < this->model.getBoardHeight()))
@@ -270,8 +269,8 @@ void ConnectionManager::moveModel(Compressed* c)
 		lose1 = true;
 	}
     
-	//cout << "head2x: " << head2.getX() << " | " <<this->model.getBoardWidth() << endl;
-	//cout << "head2y: " << head2.getY() << " | " <<this->model.getBoardHeight() << endl;    
+	cout << "head2x: " << head2.getX() << " | " <<this->model.getBoardWidth() << endl;
+	cout << "head2y: " << head2.getY() << " | " <<this->model.getBoardHeight() << endl;    
     if(!(head2.getX() >= 0 && head2.getX() < this->model.getBoardWidth() &&\
 	head2.getY() >= 0 && head2.getY() < this->model.getBoardHeight()))
 	{
@@ -358,70 +357,93 @@ void ConnectionManager::newGame()
 
 unsigned char* ConnectionManager::serialize(Compressed* c)
 {
-    unsigned char* s = static_cast<unsigned char*>(malloc(sizeof(unsigned char)*4));
-    int i = 1;
+    unsigned char* s = static_cast<unsigned char*>(malloc(sizeof(unsigned char)*9));
     
-    s[0] = 0;
-    
-    // s1Dir s1Dir s1Bonus s1Loss s2Dir s2Dir s2Bonus s2Loss
+    // s1Dir s1Loss s1Bonus s2Dir s2Loss s2Bonus
     if(c->s1Direction == 0)    // Right
-        s[0] += 64;// 01 000000
+        s[0] = '0';
     else if(c->s1Direction == 1) // Up
-        s[0] += 128+64;// 11 000000
+        s[0] = '1';
     else if(c->s1Direction == 2) // Left
-        s[0] += 0; // 00 000000
-    else // Down
-        s[0] += 128; // 10 000000
+        s[0] = '2';
+    else // Right
+        s[0] = '3';
     
     if(c->s1Loss)
-        s[0] += 32; // 00 1 00000
+        s[1] = '1';
+    else
+        s[1] = '0';
+
     
     if(c->s1BonusEaten)
     {
-        s[0] += 16; // 000 1 0000
-        s[i] = (c->s1BonusPositionX % 16)*16 + (c->s1BonusPositionY % 16);
-        i++;
+        s[2] = '0' + c->s1BonusPositionX;
+        s[3] = '0' + c->s1BonusPositionY;
+    }
+    else
+    {
+        s[2] = 'F'; // only this value is tested. 
+        s[3] = 'F';
     }
     
-    
     if(c->s2Direction == 0)    // Right
-        s[0] += 4;// 0000 01 00
+        s[4] = '0';
     else if(c->s2Direction == 1) // Up
-        s[0] += 8+4;// 0000 11 00
+        s[4] = '1';
     else if(c->s2Direction == 2) // Left
-        s[0] += 0; // 0000 00 00
+        s[4] = '2';
     else // Down
-        s[0] += 8; // 0000 10 00
+        s[4] = '3';
     
     if(c->s2Loss)
-        s[0] += 2; // 000000 1 0
+        s[5] = '1';
+    else
+        s[5] = '0';
     
     if(c->s2BonusEaten)
     {
-        s[0] += 1; // 0000000 1
-        s[i] = (c->s2BonusPositionX % 16)*16 + (c->s2BonusPositionY % 16);
-        i++;
+        s[6] = '0' + c->s2BonusPositionX;
+        s[7] = '0' + c->s2BonusPositionY;
+    }
+    else
+    {
+        s[6] = 'F';
+        s[7] = 'F';
     }
         
-    s[i] = '\0';
+    s[8] = '\0';
     
+    cout << __FUNCTION__ << ": " << s << endl;
     return s;
 }
 
-int ConnectionManager::deserialize(int s)
+int ConnectionManager::deserialize(unsigned char* s)
 {
+	unsigned char a = s[0];
+  int ret = -1;
 	
-	if(s > 127)
+  if(a == '0') // Right
+  {
+		ret = 0; // ----- RIGHT
+  }
+  else if(a == '1') // Up
+  {
+		ret = 1; // ----- UP
+  }
+  else if (a == '2') // Left
+  {
+		ret = 2; // --------- LEFT
+  }
+  else if (a == '3')// Down
 	{
-		s-=128;
-		if(s>63)
-			return 1; // ----- UP
-		return 3; // --------- DOWN
+		ret = 3; // --------- DOWN
 	}
 	else
 	{
-		if(s>63)
-			return 0; // ----- RIGHT
-		return 2; // --------- LEFT
+    cout << __FUNCTION__  << " : ERROR direction coding" << endl;
 	}
+
+  cout << __FUNCTION__ << " : return direction [" << ret << "]" << endl;
+  return ret;
 }
+

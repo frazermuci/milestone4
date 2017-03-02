@@ -34,6 +34,7 @@ class ConnectionManager
 	map<int, bool> state;
 	//maps clientID with snakeNumber/ConnectionNumber (i.e. 0 or 1)
 	map<int, int> clientIDWithConnNum;
+	//maps sequence number with map that maps client with bool
 	map<int,map<int, bool> > sequenceMap;
 	bool gameOn;
 	Compressed c;
@@ -63,7 +64,7 @@ class ConnectionManager
 		void newGame();
 		//Compressed compressModel();
 		unsigned char* serialize(Compressed* c);
-		int deserialize(int s);
+		int deserialize(unsigned char* s);
 };
 
 #endif

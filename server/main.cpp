@@ -32,7 +32,8 @@ ConnectionManager cm = ConnectionManager(&server, 12, 9);//server is not initial
 priority_queue <QueueQuintuple, vector<QueueQuintuple>, QueueQuintuple> messageQueue;
 //maps clientID with sequence count;
 map<int,int> clientIDSequenceCount = map<int,int>();
-int count = 0;
+
+int gcount = 0;
 time_t  timev;
 //time(&timev);
 
@@ -42,14 +43,14 @@ void openHandler(int clientID)
 	time(&timev);
 	time_t temp = timev;
 	ostringstream os;
-	//bool isZero = count == 0;
+	//bool isZero = gcount == 0;
 	//os << "init"<<":"<<isZero?"2:2":"4:4";
 	
-	cm.connNumWithClientID(clientID, count);
-	
+	cm.connNumWithClientID(clientID, gcount);
 	clientIDSequenceCount[clientID] = 0;
 	time(&timev);
-	os << "init:" << count << ":" <<(timev-temp);
+	os << "init:" << gcount << ":" <<(timev-temp);
+  cout << __FUNCTION__ << ": " << "init sends [" << os.str() <<"]" << endl;
 	cm.send(clientID, os.str());
 	/*int x,y = 4;
 	if(isZero)
@@ -57,16 +58,18 @@ void openHandler(int clientID)
 		x = 2;
 		y = 2;
 	}
+
 	cm.addSnake(clientID, x, y, Tuple(0,1));*/
-	count = count == 0 ? 1 : 0;
+	gcount = gcount == 0 ? 1 : 0;
 }
 
 /* called when a client disconnects */
 void closeHandler(int clientID)
 {   
+  cout << __FUNCTION__ << ": " <<"end"<<":"<< endl;
 	cm.removeConn(clientID);
 	cm.removeSnake(clientID);
-	count = cm.getConnNum(clientID) == 1 ? 1 : 0;
+  gcount = cm.getConnNum(clientID) == 1 ? 1 : 0;
 }
 
 vector<string> parseMessage(string message)
@@ -100,6 +103,7 @@ void initializeConnection(int clientID, vector<string> mVect)
 	cm.addConn(clientID, atoi(mVect.at(1).c_str()));
 	if(cm.connReady())
 	{
+    cout << __FUNCTION__ << ": " << "connReady" << endl;
 		cm.newGame();
 		cm.sendIDs();//on client side, wait until "begin"
 	}
@@ -125,6 +129,7 @@ string handleBinaryConversion(int i)
 	}
 	return os.str();
 }
+
 void decrementDelays()
 {
 	vector<QueueQuintuple> temp = vector<QueueQuintuple>();
@@ -144,20 +149,22 @@ void decrementDelays()
 /* called when a client sends a message to the server */
 void messageHandler(int clientID, string message)
 {
+  cout << __FUNCTION__ << ": " <<"message : [" << message << "]" << endl;
+	//puts message in buffer
 	if(cm.isGameOn())
 	{
 		time(&timev);
 		time_t tempTime = timev;
-		//cout << message << endl;
 		vector<string> mVect = parseMessage(message);
 		if(isInitMessage(mVect.at(0)))
 		{
 			//parse message and get id
-			//cout << "clientID: " << clientID << " otherID: " << mVect.at(1) << endl;
+    cout << __FUNCTION__ << ": " << "clientID: " << clientID << " otherID: " << mVect.at(1) << endl;
 			initializeConnection(clientID, mVect);
 			return;
 		}
-		cm.updateModel(clientID, cm.deserialize(atoi(message.c_str())));
+
+		cm.updateModel(clientID, cm.deserialize((unsigned char*)message.c_str()));
 		QueueQuintuple qp = QueueQuintuple();
 		qp.message = message;		
 		qp.clientID = clientID;
@@ -179,7 +186,9 @@ void inPeriodic()
 	ostringstream os;		
 	QueueQuintuple qp;
 	vector<QueueQuintuple> rejectList = vector<QueueQuintuple>();
+
 	decrementDelays();
+	cout << __FUNCTION__ <<  " delay [" << messageQueue.top().delay << endl;
 	while(messageQueue.size()!=0 && (qp = messageQueue.top()).delay <= 0)
 	{
 		messageQueue.pop();
@@ -189,14 +198,12 @@ void inPeriodic()
 			//cout << __FUNCTION__ << endl;
 			Compressed* c = static_cast<Compressed*>(malloc(sizeof(struct Compressed)));
 			cm.moveModel(c);
-			string st = handleBinaryConversion(cm.serialize(c)[0]);
-			string bonusPos1 = handleBinaryConversion(cm.serialize(c)[1]);
-			string bonusPos2 = handleBinaryConversion(cm.serialize(c)[2]);
 			time(&timev);
-			os << st << ":" << bonusPos1 << ":" << bonusPos2 << ":" << timev-qp.timestamp;
-			//cout << " time stamp: " << timev-qp.timestamp << endl;
-			//cout << os.str() << endl;
+			os << cm.serialize(c) << ":" << (timev - qp.timestamp);
+      cout << __FUNCTION__ << ": " << "serialize : " << os.str() << endl;
+
 			cm.sendAll(os.str().c_str());
+
 			os.str("");
 			free(c);
 		}
@@ -205,6 +212,7 @@ void inPeriodic()
 			rejectList.push_back(qp);
 		}
 	}
+
 	for(vector<QueueQuintuple>::iterator it = rejectList.begin(); it != rejectList.end(); ++it)
 	{
 		messageQueue.push(*it);
@@ -213,14 +221,15 @@ void inPeriodic()
 		
 }
 
-/* called orrnce per select() loop */
-void periodicHandler(){
+/* called once per select() loop */
+void periodicHandler()
+{
 	if(cm.connReady())
 	{
 		static time_t next = time(NULL) + 2;
 		time_t current = time(NULL);
-		if (current >= next){
-		
+		if (current >= next)
+		{
 			inPeriodic();
 			next = time(NULL) + 2;
 		}

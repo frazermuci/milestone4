@@ -177,6 +177,7 @@ Tuple Model::makeBonus(int bpos)
 	}
 	//cout << "x: "<< x << "   y: " << y << endl;
 	this->bonuses.at(bpos) = Tuple(x,y);
+	return Tuple(x,y);
 }
 
 int Model::getBoardWidth()

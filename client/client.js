@@ -9,55 +9,8 @@ function Socket(model){
 	first = Math.floor( Date.now() / 1000 );
 	this.model = model;
 	this.connection = new WebSocket('ws://'+clientAddress+':'+clientPort);//, ['soap', 'xmpp']);
-	this.buff= {seqNum: 0, buffVect : new Vector(0,0)};
-	this.tVar;
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////RIGHT NOW, ONLY ASSUME ONE TICK PASSED/////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	function correctSnake(sID, snake,dir)
-	{
-		var rev = new Vector(dir.x*-1,dir.y*-1);
-		var body = snake.getBody();
-		for(var i = 0; i < body.length; ++i)
-		{
-			if(!(body[i].x == 0 && body[i].y == 0))
-			{
-				body[i] = body[i].add(rev);
-			}
-		}
-		snake.changeDirection(dir);
-		//grow snake?///////////////MIGHT CAUSE SOME ISSUES
-		//getModel().growSnake(sID);
-		window.setTimeout(ControllerTick, 750);
-		/////////////////
-	}
-	function resetBuff(dir)
-	{
-		var otherSnakeId = getModel().snakeID == 1 ? 0 : 1;
-		var otherSnake = getModel().getSnake(otherSnake);
-		//is this why he had the pre allocated snake?
-		
-		//////////////RIGHT NOW, ONLY ASSUME ONE TICK PASSED/////
-		if(!dir.equals(otherSnake.getDirection()))
-		{
-			
-			correctSnake(otherSnakeId, otherSnake, dir);//move body back one and
-		}
-		this.buff = {seqNum: 0, buffVect : new Vector(0,0)};
-	}
 	
-	function extrapolate (seqNum, dir)
-	{
-		var func = function()
-		{
-			this.buff.seqNum = seqNum+1;
-			this.buff.buffVect = this.buff.buffVect.add(dir);	
-		}
-		return func;
-	}
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	this.convertBinToInt = function(input)
 	{
 		var a = 0;//s[0];
@@ -73,15 +26,9 @@ function Socket(model){
 		return a;
 	}
 	
-	this.deserialize = function(bin)
+	this.deserialize = function(s)
 	{
-    
-		s= [0,0,0,0]
-		for(var h =0 ; h < bin.length; ++h)
-		{
-			s[h] = this.convertBinToInt(bin[h]);
-		}
-		a= s[0];
+    var a = s[0];
 		var s1Dir = new Vector(1,0);
 		var s1Bonus = false;
 		var s1Loss = false;
@@ -93,132 +40,149 @@ function Socket(model){
 		var s2BonusX = 0;
 		var s2BonusY = 0;
     
-		// s1Dir s1Dir s1Bonus s1Loss s2Dir s2Dir s2Bonus s2Loss
-		if(a > 127)
+    console.log("client.deserialize.in [" + a + "]");
+    
+    // s1Dir s1Loss s1Bonus s2Dir s2Loss s2Bonus
+    if(a == '0') // Right
 		{
-			a -= 128;
-			if(a > 63) // Up
+      console.log("client.deserialize.RIGHT 1");
+      s1Dir.setX(1);
+      s1Dir.setY(0);
+    }
+    else if(a == '1') // Up
+		{
+      console.log("client.deserialize.UP 1");
+      s1Dir.setX(0);
+      s1Dir.setY(-1);
+    }
+    else if (a == '2') // Left
 			{
-				a-=64;
-				s1Dir = new Vector(0,-1);
+      console.log("client.deserialize.LEFT 1");
+      s1Dir.setX(-1);
+      s1Dir.setY(0);
 			}
-			else // Down
-				s1Dir = new Vector(0, 1);
+    else if (a == '3')// Down
+    {
+      console.log("client.deserialize.DOWN 1");
+      s1Dir.setX(0);
+      s1Dir.setY(1);
 		}
 		else
 		{
-			if(a > 63) // Right
-			{
-				a-=64;			
-				s1Dir = new Vector(1,0);
-			}
-			else // Left
-				s1Dir = new Vector(-1, 0);
+      console.log("ERROR direction 1 coding");
+      s1Dir.setX(0);
+      s1Dir.setY(1);
 		}
     
-		if(a > 31)
+    a = s[1];
+    if(a == '1')
 		{
-			a-= 32;
+      console.log("client.deserialize.LOSS 1");
 			s1Loss = true;
 		}
     
-		if(a > 15)
+    if(s[2] != 'F')
 		{
-			a-= 16;
 			s1Bonus = true;
+      s1BonusX = s[2] - '0';
+      s1BonusY = s[3] - '0'; 
+      console.log("client.deserialize.BONUS 1 [" + s1BonusX + "]" );
 		}
     
-		if(a > 7)
+    a = s[4];
+    if(a == '0') // Right
 		{
-			a -= 8;
-			if(a > 3) // Up
+      console.log("client.deserialize.RIGHT 2");
+      s2Dir.setX(1);
+      s2Dir.setY(0);
+    }
+    else if(a == '1') // Up
 			{
-				a-=4;
-				s2Dir = new Vector(0,-1);
+      console.log("client.deserialize.UP 2");
+      s2Dir.setX(0);
+      s2Dir.setY(-1);
 			}
-			else // Down
-				s2Dir = new Vector(0, 1);
+    else if (a == '2') // Left
+			{
+      console.log("client.deserialize.LEFT 2");
+      s2Dir.setX(-1);
+      s2Dir.setY(0);
+			}
+    else if (a == '3')// Down
+    {
+      console.log("client.deserialize.DOWN 2");
+      s2Dir.setX(0);
+      s2Dir.setY(1);
 		}
 		else
 		{
-			if(a > 3) // Right
-			{
-				a-=4;
-				s2Dir = new Vector(1,0);
-			}
-			else // Left
-				s2Dir = new Vector(-1, 0);
+      console.log("ERROR direction 2 coding");
+      s2Dir.setX(0);
+      s2Dir.setY(1);
 		}
     
-		if(a > 1)
+    a = s[5];
+    if(a == '1')
 		{
-			a-= 2;
+      console.log("client.deserialize.LOSS 2");
 			s2Loss = true;
 		}
     
-		if(a > 0)
+    if(s[2] != 'F')
 		{
-			a-= 1;
 			s2Bonus = true;
-		}
-    
-		var i = 1;
-    
-		if(s1Bonus)
-		{
-			var b = s[i];
-			s1BonusY = b%16;
-			s1BonusX = (b-s1BonusY)/16;
-			i++;
-		}
-		if(s2Bonus)
-		{
-			var c = s[i];
-			s2BonusY = c%16;
-			s2BonusX = (c-s2BonusY)/16;
-			i++;
+      s2BonusX = s[2] - '0';
+      s2BonusY = s[3] - '0'; 
+      console.log("client.deserialize.BONUS 2 [" + s2BonusX + "]" );
 		}
     
 		// SET TO MODEL
 		if(getModel().snakeIndex == 1)
 		{
+      console.log("client.deserialize.changeDirection 1 [" + s1Dir.getX() + "]");
 			getModel().changeDirection(0, s1Dir);
 		}
 		else
 		{
-			console.log(getModel().snakeIndex)
+      console.log("client.deserialize.changeDirection 2 [" + s2Dir.getX() + "]");
 			getModel().changeDirection(1, s2Dir);
 		}
-		
+    
+    console.log("client.deserialize.growSnake");
 		getModel().growSnake(0);
 		getModel().growSnake(1);
+
 		if(s1Bonus)
 		{
+        console.log("client.deserialize.BONUS 1set");
 			getModel().getSnake(0).eatBonus();
-			getModel.score[0] +=100
+        
 			var bonusToChange = 1;
 			var newBonusPos = new Vector(s1BonusX, s1BonusY);
 			var snake1Head = getModel().getSnake(0).getHead();
         
-			if(snake1Head.equals(getModel().bonuses[0]))
+        if(snake1Head.equals(getModel().getBonuses()[0]))
 				bonusToChange = 0;
         
-			getModel().bonuses[bonusToChange] = newBonusPos;
+        getModel().getBonuses()[bonusToChange] = newBonusPos;
 		}
 		if(s2Bonus)
 		{
+        console.log("client.deserialize.BONUS 2set");
 			getModel().getSnake(1).eatBonus();
-			getModel().score[1] +=100
+        
 			var bonusToChange = 1;
 			var newBonusPos = new Vector(s2BonusX, s2BonusY);
-			var snake1Head = getModel().getSnake(1).getHead();
+        var snake1Head = getModel().getSnake(0).getHead();
         
-			if(snake1Head.equals(getModel().bonuses[0]))
+        if(snake1Head.equals(getModel().getBonuses()[0]))
 				bonusToChange = 0;
         
-			getModel().bonuses[bonusToChange] = newBonusPos;
+        
+        getModel().getBonuses()[bonusToChange] = newBonusPos;
 		}
-		//document.getElementById("toptitle").innerHTML = getModel().ids[0]+"Score: "+getModel().score[0] + " - "+ getModel().ids[1] + "Score: " + getModel().score[0]
+    
+    console.log("client.deserialize.fin test");
 		if(s1Loss && s2Loss)
 		{
 			ControllerTie();
@@ -227,6 +191,7 @@ function Socket(model){
 			ControllerWin(2);
 		else if(s2Loss)
 			ControllerWin(1);
+    console.log("client.deserialize.end");
 		}
 	
 		this.serialize = function(model)
@@ -236,13 +201,23 @@ function Socket(model){
 		var dir = snake.direction;
     
 		if(dir.equals(new Vector(1,0))) // Right
-			return 64+16+4+1; // 01 01 01 01
+    {
+      console.log("client.serialize.RIGHT");
+      return '0';
+    }
 		if(dir.equals(new Vector(0,-1))) // Up
-			return 128+64+32+16+8+4+2+1; // 11 11 11 11
+    {
+      console.log("client.serialize.UP");
+      return '1';
+    }
 		if(dir.equals(new Vector(-1,0))) // Left
-			return 0; // 00 00 00 00
-		if(dir.equals(new Vector(0,1))) // Down
-			return 128+32+8+2; // 01 01 01 01
+    {
+      console.log("client.serialize.LEFT");
+      return '2';
+    }
+    //if(dir.equals(new Vector(0,1))) // Down
+    console.log("client.serialize.DOWN");
+    return '3'; 
 	}
 
 // Log errors
@@ -254,38 +229,40 @@ function Socket(model){
 	
 	this.sendMessage = function(inc)
 	{
+		console.log('Socket.sendMessage [' + inc + ']');
 		first = Math.floor( Date.now() / 1000 );
 		this.connection.send(inc);
 	}
+
 // Log messages from the server
 	this.connection.onmessage = (e)=> {
+		console.log('Socket.onmessage [' + e.data + ']');
 		//this is in scope?
-		resetBuff();
-		clearTimeout(this.tVar);
 		var array = e.data.split(":");
-		//console.log(array)
-		console.log((Math.floor( Date.now() / 1000 ))-first);
-		//console.log(parseInt(array[3]));
-		//console.log(array[3]);
+    var ind = array.length;
+    if (ind > 0)
+      ind--;
+		console.log("NOW : " + ((Math.floor( Date.now() / 1000 ))-first));
+		console.log("timestamp : " + parseInt(array[ind]));
 		calculatedLatency = (Math.floor( Date.now() / 1000 )-first);//-parseInt(array[3]);
-		document.getElementById("latency").innerHTML = calculatedLatency == null ? 0 : calculatedLatency;
+		document.getElementById("latency").innerHTML = calculatedLatency;
 
 		if (array[0] == "init")
 		{
+			console.log("Socket.onmessage.init");
 			this.sendMessage("init:" + model.snakeID);
 		}
 		else if(array[0] == "start")
 		{
-			//ID
-			getModel().snakeIndex = parseInt(array[2]);
-			var temp = getModel().snakeIndex == 1 ? 0 : 1;
-			getModel().ids[temp] = parseInt(array[1]);
-			getModel().ids[getModel().snakeIndex] = getModel().snakeID;
+			console.log("Socket.onmessage.start");
+			parseInt(array[1]);//ID
+			getModel().snakeIndex = parseInt(array[2]);//TODO 
 			window.setTimeout(ControllerTick, 750);
 		}
 		else 
 		{
-			this.deserialize(array);
+      console.log("Socket.onmessage.else");
+			this.deserialize(array[0]);
 			//ViewRefresh();
 			window.setTimeout(ControllerTick, 750);
 			//ViewRefresh();
@@ -293,8 +270,8 @@ function Socket(model){
 		
 		this.count =0;
 		ViewRefresh();
-		var inID = getModel().snakeIndex == 1 ? 0 : 1;
-		this.tVar = setInterval(extrapolate(inID, getModel().getSnake(inID).getDirection()),500);
 	}
-	this.done = ()=>{this.connection.send("DONE")}
+
+	//this.done = ()=>{this.connection.send("DONE")}
+	this.done = ()=>{this.sendMessage("DONE")}
 };

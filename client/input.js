@@ -16,6 +16,7 @@ function handleKeyPress(event)
 	 	vector.setX(-1);
 		//ControllerChangeDirection(0, vector);
 		ControllerChangeDirection(vector);
+		console.log("left");
 		
 	}
 	else if (code == 119)
@@ -23,17 +24,20 @@ function handleKeyPress(event)
 		vector.setY(-1);
 		//ControllerChangeDirection(0, vector);
 		ControllerChangeDirection(vector);
+		console.log("up");
 	}
 	else if (code == 100)
 	{
 		vector.setX(1);
 		//ControllerChangeDirection(0, vector);
 		ControllerChangeDirection(vector);
+		console.log("right");
 	}
 	else if (code == 115)
 	{
 		vector.setY(1);
 		//ControllerChangeDirection(0, vector);
 		ControllerChangeDirection(vector);
+		console.log("down");
 	}
 }
