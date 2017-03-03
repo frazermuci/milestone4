@@ -1,8 +1,10 @@
 var controllerInterval;
 var socket;
+var controllerGameEnded = false;
 
 function ControllerNewGame()
 {
+	controllerGameEnded = false;
 	console.log("ControllerNewGame");
     getModel().newGame();
     getModel().isRunning = 1;
@@ -12,6 +14,7 @@ function ControllerNewGame()
 
 function ControllerStopGame()
 {
+	controllerGameEnded = true;
 	console.log("ControllerStopGame");
     getModel().isRunning = 0;
 	ViewRefresh();
@@ -35,6 +38,10 @@ function ControllerWin(id)
 
 function ControllerTick()
 {
+	if(controllerGameEnded)
+	{
+		return;
+	}
 	console.log("ControllerTick.Tick");
 	socket.sendMessage(socket.serialize(getModel()));
 	ViewRefresh();
